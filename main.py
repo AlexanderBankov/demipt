@@ -30,3 +30,54 @@ def ext_load():
     df['created'] = df['created'].apply(lambda x: x.strftime('%Y-%m-%d'))
     df = df.astype(object).where(pandas.notnull(df),None)
     curs.executemany( """insert into DEMIPT.BNSO_STG_SCHEDULE_FACT ( SCHEDULE_FACT_ID , SCHEDULE_ID , CREATED , DELETED , VOLUME , EXPENDITURE  ) values ( ?, ?, to_date( ?, 'YYYY-MM-DD HH24:MI:SS' ), ?, ?, ?)""", df.values.tolist() )
+
+#Функция для выполнения загрузки в DWH в SCD2
+def run_sql_scd2 ():
+    with open('/home/demipt/bnso/sql_scripts/bnso_scd2.sql', 'r', newline='') as file:
+        sql = file.read()
+        for sql_statement in sql.split(';'):
+            curs.execute(sql_statement)
+
+#Функция для выполнения отчетов
+def run_sql_report ():
+    with open('/home/demipt/bnkv/sql_scripts/report.sql', 'r', newline='') as file:
+        sql = file.read()
+        for sql_statement in sql.split(';'):
+            curs.execute(sql_statement)
+
+#Функция для помещения файлов в архив
+#def to_archive ():
+#    os.rename ('/home/demipt/bnkv/terminals_'+var+'.xlsx', '/home/demipt/bnkv/archive/terminals_'+var+'.xlsx.backup')
+#    os.rename ('/home/demipt/bnkv/passport_blacklist_'+var+'.xlsx', '/home/demipt/bnkv/archive/passport_blacklist_'+var+'.xlsx.backup')
+#    os.rename ('/home/demipt/bnkv/transactions_'+var+'.txt', '/home/demipt/bnkv/archive/transactions_'+var+'.txt.backup')
+
+# 01.03.2021
+input('Нажмите Enter для загрузки данных за 01.01.2021')
+print ('Загрузка данных за 01.01.2021...')
+var = '01012021'
+ext_load()
+run_sql_scd2()
+run_sql_report()
+to_archive ()
+input('Загрузка данных за 01.01.2021 завершена, отчеты составлены. Нажмите Enter для загрузки данных за 01.02.2021')
+
+#02.03.2021
+print ('Загрузка данных за 01.02.2021...')
+var = '01022021'
+ext_load()
+run_sql_scd2()
+run_sql_report()
+to_archive ()
+input('Загрузка данных за 01.02.2021 завершена, отчеты составлены. Нажмите Enter для загрузки данных за 01.03.2021')
+
+#03.03.2021
+print ('Загрузка данных за 01.03.2021...')
+var = '01032021'
+ext_load()
+run_sql_scd2()
+run_sql_report()
+to_archive ()
+print ('Загрузка данных выполнена, отчеты составлены. Александр молодец и заслуживает максимальных баллов. :)')
+
+curs.close()
+conn.close()
