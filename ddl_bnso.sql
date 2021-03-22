@@ -1,11 +1,11 @@
 --------------------------------------------------------
--- DDLs for staging
+-- DDLs for source tables
 --------------------------------------------------------
 --------------------------------------------------------
 --  DDL for Table OBJECTS
 --------------------------------------------------------
 -- Нужны поля 0, 2, 3, 4, 7, 12, 15, 17, 18
-CREATE TABLE DEMIPT.BNSO_STG_OBJECTS (
+CREATE TABLE DEMIPT.BNSO_SRC_OBJECTS (
 	object_id integer,
 	-- 1 object_guid uuid,
 	project_id integer,
@@ -39,7 +39,7 @@ CREATE TABLE DEMIPT.BNSO_STG_OBJECTS (
 --  DDL for Table SCHEDULE
 --------------------------------------------------------
 -- Нужны поля 0, 1, 3, 4, 5, 8, 10, 12, 13, 18, 19, 20
-CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE (
+CREATE TABLE DEMIPT.BNSO_SRC_SCHEDULE (
 	schedule_id integer,
 	object_id integer,
 	--2 schedule_guid uuid
@@ -69,7 +69,7 @@ CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE (
 --  DDL for Table SCHEDULE_FACT
 --------------------------------------------------------
 -- Нужны поля 0, 1, 3, 4, 7, 9, 10
-CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE_FACT (
+CREATE TABLE DEMIPT.BNSO_SRC_SCHEDULE_FACT (
 	schedule_fact_id integer,
 	schedule_id integer,
 	--2 schedule_fact_group_id integer
@@ -88,6 +88,54 @@ CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE_FACT (
 	--16 created_original timestamp
 	--17 employee integer
 	--18 image_count integer
+);
+
+--------------------------------------------------------
+-- DDLs for staging
+--------------------------------------------------------
+--------------------------------------------------------
+--  DDL for Table OBJECTS
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_STG_OBJECTS (
+	object_id integer,
+	project_id integer,
+	created date,
+	modified date,
+	deleted integer,
+	region_id integer,
+	object_type_id integer,
+	date_start date,
+	date_finish date
+);
+
+--------------------------------------------------------
+--  DDL for Table SCHEDULE
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE (
+	schedule_id integer,
+	object_id integer,
+	parent_id integer,
+	created date,
+	modified date,
+	deleted integer,
+	job_id integer,
+	volume_actual numeric,
+	expenditure_actual numeric,
+	volume_sum numeric,
+	expenditure_sum numeric,
+	element_id integer
+);
+
+--------------------------------------------------------
+--  DDL for Table SCHEDULE_FACT
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_STG_SCHEDULE_FACT (
+	schedule_fact_id integer,
+	schedule_id integer,
+	created date,
+	deleted integer,
+	volume numeric,
+	expenditure numeric
 );
 
 --------------------------------------------------------
@@ -169,29 +217,87 @@ VALUES ( 'DEMIPT', 'BNSO_DWH_DIM_SCHEDULE_HIST', to_date( '1800-01-01', 'YYYY-MM
 INSERT INTO DEMIPT.BNSO_META_LOADING( DBNAME, TABLENAME, LAST_UPDATE ) 
 VALUES ( 'DEMIPT', 'BNSO_DWH_DIM_OBJECT_HIST', to_date( '1800-01-01', 'YYYY-MM-DD' ) );
 
+--------------------------------------------------------
+-- DDL for report INPUT_DROP
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_REP_INPUT_DROP (
+	EVENT_DT date,
+	OBJECT_ID integer,
+	TYPE varchar2(20),
+	CUR_INPUT_NUM integer,
+	LAST_INPUT_NUM integer,
+	REPORT_DT DATE
+);
+--------------------------------------------------------
+-- DDL for report MISTAKE_ALERT
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_REP_MISTAKE_ALERT (
+	EVENT_DT date,
+	OBJECT_ID integer,
+	TYPE varchar2(20),
+	CUR_INPUT integer,
+	LAST_INPUT integer,
+	REPORT_DT DATE
+);
+
+--------------------------------------------------------
+--  DDL for Report META
+--------------------------------------------------------
+CREATE TABLE DEMIPT.BNSO_META_REPORT (
+	REPORT_NAME VARCHAR2(100),
+	CURRENT_REPORT_DT DATE,
+	PREVIOUS_REPORT_DT DATE
+);
+
+--------------------------------------------------------
+-- First input for META
+--------------------------------------------------------
+INSERT INTO DEMIPT.BNSO_META_REPORT ( REPORT_NAME, CURRENT_REPORT_DT, PREVIOUS_REPORT_DT ) 
+VALUES ( 'INPUT_DROP', to_date( '1800-01-01', 'YYYY-MM-DD' ), to_date( '1800-01-01', 'YYYY-MM-DD' ) );
+INSERT INTO DEMIPT.BNSO_META_REPORT ( REPORT_NAME, CURRENT_REPORT_DT, PREVIOUS_REPORT_DT ) 
+VALUES ( 'MISTAKE_ALERT', to_date( '1800-01-01', 'YYYY-MM-DD' ), to_date( '1800-01-01', 'YYYY-MM-DD' ) );
+
 COMMIT
 /*
 SELECT * FROM DEMIPT.BNSO_STG_OBJECTS;
 SELECT * FROM DEMIPT.BNSO_STG_SCHEDULE;
 SELECT * FROM DEMIPT.BNSO_STG_SCHEDULE_FACT;
 SELECT * FROM DEMIPT.BNSO_DWH_FACT_SCHEDULE;
-SELECT * FROM DEMIPT.BNSO_DWH_DIM_SCHEDULE;
-SELECT * FROM DEMIPT.BNSO_DWH_DIM_OBJECT;
+SELECT * FROM DEMIPT.BNSO_DWH_DIM_SCHEDULE_HIST;
+SELECT * FROM DEMIPT.BNSO_DWH_DIM_OBJECT_HIST;
 SELECT * FROM DEMIPT.BNSO_META_LOADING;
+SELECT * FROM DEMIPT.BNSO_SRC_OBJECTS;
+SELECT * FROM DEMIPT.BNSO_SRC_SCHEDULE;
+SELECT * FROM DEMIPT.BNSO_SRC_SCHEDULE_FACT;
+SELECT * FROM DEMIPT.BNSO_REP_INPUT_DROP;
+SELECT * FROM DEMIPT.BNSO_REP_MISTAKE_ALERT;
+SELECT * FROM DEMIPT.BNSO_META_REPORT;
 
 DELETE FROM DEMIPT.BNSO_STG_OBJECTS;
 DELETE FROM DEMIPT.BNSO_STG_SCHEDULE;
 DELETE FROM DEMIPT.BNSO_STG_SCHEDULE_FACT;
 DELETE FROM DEMIPT.BNSO_DWH_FACT_SCHEDULE;
-DELETE FROM DEMIPT.BNSO_DWH_DIM_SCHEDULE;
-DELETE FROM DEMIPT.BNSO_DWH_DIM_OBJECT;
+DELETE FROM DEMIPT.BNSO_DWH_DIM_SCHEDULE_HIST;
+DELETE FROM DEMIPT.BNSO_DWH_DIM_OBJECT_HIST;
 DELETE FROM DEMIPT.BNSO_META_LOADING;
+DELETE FROM DEMIPT.BNSO_SRC_OBJECTS;
+DELETE FROM DEMIPT.BNSO_SRC_SCHEDULE;
+DELETE FROM DEMIPT.BNSO_SRC_SCHEDULE_FACT;
+DELETE FROM DEMIPT.BNSO_REP_INPUT_DROP;
+DELETE FROM DEMIPT.BNSO_REP_MISTAKE_ALERT;
+DELETE FROM DEMIPT.BNSO_META_REPORT;
 
 DROP TABLE DEMIPT.BNSO_STG_OBJECTS;
 DROP TABLE DEMIPT.BNSO_STG_SCHEDULE;
 DROP TABLE DEMIPT.BNSO_STG_SCHEDULE_FACT;
 DROP TABLE DEMIPT.BNSO_DWH_FACT_SCHEDULE;
-DROP TABLE DEMIPT.BNSO_DWH_DIM_SCHEDULE;
-DROP TABLE DEMIPT.BNSO_DWH_DIM_OBJECT;
+DROP TABLE DEMIPT.BNSO_DWH_DIM_SCHEDULE_HIST;
+DROP TABLE DEMIPT.BNSO_DWH_DIM_OBJECT_HIST;
 DROP TABLE DEMIPT.BNSO_META_LOADING;
+DROP TABLE DEMIPT.BNSO_SRC_OBJECTS;
+DROP TABLE DEMIPT.BNSO_SRC_SCHEDULE;
+DROP TABLE DEMIPT.BNSO_SRC_SCHEDULE_FACT;
+DROP TABLE DEMIPT.BNSO_REP_INPUT_DROP;
+DROP TABLE DEMIPT.BNSO_REP_MISTAKE_ALERT;
+DROP TABLE DEMIPT.BNSO_META_REPORT;
 */
