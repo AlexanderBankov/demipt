@@ -40,7 +40,7 @@ def run_sql_scd2 ():
 
 Функция для выполнения отчетов
 def run_sql_report ():
-    with open('/home/demipt/bnso/sql_scripts/report.sql', 'r', newline='') as file:
+    with open('/home/demipt/bnso/sql_scripts/bnso_report.sql', 'r', newline='') as file:
         sql = file.read()
         for sql_statement in sql.split(';'):
             curs.execute(sql_statement)
